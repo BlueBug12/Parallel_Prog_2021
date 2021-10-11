@@ -1,4 +1,6 @@
 #!/bin/bash
+# $1 denotes VECTOR_WIDTH
+# $2 denotes array size
 count=0
 for ((i=$1;i<=$2;i++))
 do
