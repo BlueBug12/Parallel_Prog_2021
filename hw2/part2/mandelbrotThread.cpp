@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <ctime>
+#include <iostream>
 #include <thread>
-
 #include "CycleTimer.h"
 
 typedef struct
@@ -15,25 +16,6 @@ typedef struct
     int numThreads;
 } WorkerArgs;
 
-static inline int mandel(float c_re, float c_im, int count)
-{
-  float z_re = c_re, z_im = c_im;
-  int i;
-  for (i = 0; i < count; ++i)
-  {
-
-    if (z_re * z_re + z_im * z_im > 4.f)
-      break;
-
-    float new_re = z_re * z_re - z_im * z_im;
-    float new_im = 2.f * z_re * z_im;
-    z_re = c_re + new_re;
-    z_im = c_im + new_im;
-  }
-
-  return i;
-}
-
 extern void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     int width, int height,
@@ -47,41 +29,24 @@ extern void mandelbrotSerial(
 // Thread entrypoint.
 void workerThreadStart(WorkerArgs *const args)
 {
+    std::clock_t c_start = std::clock();
     float x0 = args->x0;
     float x1 = args->x1;
     float y0 = args->y0;
     float y1 = args->y1;
-    int width = args->width;
-    int height = args->height;
-    int maxIterations = args->maxIterations;
-    int *output = args->output;
 
-    int segment = height/args->numThreads;
+    int segment = args->height/args->numThreads;
     int startRow = args->threadId * segment;
-    int endRow = startRow + segment;
-
-    float dx = (x1 - x0) / width;
-    float dy = (y1 - y0) / height;
-
-
-    for (int j = startRow; j < endRow; j++)
-    {
-        for (int i = 0; i < width; ++i)
-        {
-        float x = x0 + i * dx;
-        float y = y0 + j * dy;
-
-        int index = (j * width + i);
-        output[index] = mandel(x, y, maxIterations);
-        }
-    }
+    mandelbrotSerial(x0,y0,x1,y1,args->width,args->height,startRow,segment,args->maxIterations,args->output);
+    std::clock_t c_end = std::clock();
     // TODO FOR PP STUDENTS: Implement the body of the worker
     // thread here. Each thread should make a call to mandelbrotSerial()
     // to compute a part of the output image.  For example, in a
     // program that uses two threads, thread 0 could compute the top
     // half of the image and thread 1 could compute the bottom half.
 
-    printf("Hello world from thread %d\n", args->threadId);
+    //printf("Hello world from thread %d\n", args->threadId);
+    std::cout<<"Thread "<< args->threadId<<" costs "<<1000.0 * (c_end - c_start) / CLOCKS_PER_SEC<<" ms."<<std::endl;
 }
 
 //
