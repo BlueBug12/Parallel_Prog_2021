@@ -15,6 +15,25 @@ typedef struct
     int numThreads;
 } WorkerArgs;
 
+static inline int mandel(float c_re, float c_im, int count)
+{
+  float z_re = c_re, z_im = c_im;
+  int i;
+  for (i = 0; i < count; ++i)
+  {
+
+    if (z_re * z_re + z_im * z_im > 4.f)
+      break;
+
+    float new_re = z_re * z_re - z_im * z_im;
+    float new_im = 2.f * z_re * z_im;
+    z_re = c_re + new_re;
+    z_im = c_im + new_im;
+  }
+
+  return i;
+}
+
 extern void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     int width, int height,
@@ -28,7 +47,34 @@ extern void mandelbrotSerial(
 // Thread entrypoint.
 void workerThreadStart(WorkerArgs *const args)
 {
+    float x0 = args->x0;
+    float x1 = args->x1;
+    float y0 = args->y0;
+    float y1 = args->y1;
+    int width = args->width;
+    int height = args->height;
+    int maxIterations = args->maxIterations;
+    int *output = args->output;
 
+    int segment = height/args->numThreads;
+    int startRow = args->threadId * segment;
+    int endRow = startRow + segment;
+
+    float dx = (x1 - x0) / width;
+    float dy = (y1 - y0) / height;
+
+
+    for (int j = startRow; j < endRow; j++)
+    {
+        for (int i = 0; i < width; ++i)
+        {
+        float x = x0 + i * dx;
+        float y = y0 + j * dy;
+
+        int index = (j * width + i);
+        output[index] = mandel(x, y, maxIterations);
+        }
+    }
     // TODO FOR PP STUDENTS: Implement the body of the worker
     // thread here. Each thread should make a call to mandelbrotSerial()
     // to compute a part of the output image.  For example, in a
