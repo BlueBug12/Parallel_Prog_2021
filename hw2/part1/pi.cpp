@@ -5,27 +5,24 @@
 
 typedef struct
 {
-   int thread_id;
-   int iteration;
+   unsigned thread_id;
+   unsigned iteration;
 } Arg;
 
-//long long int circle[16];
 long long int total_sum = 0;
 pthread_mutex_t mutex;
 
 void *countPi(void *arg){
     Arg *data = (Arg *)arg;
-    int iter = data->iteration;
-    int id = data->thread_id;
-    unsigned int seed = id;
+    unsigned iter = data->iteration;
+    unsigned id = data->thread_id;
+    unsigned seed = id;
     long long int sum = 0;
-    while(iter>0){
+    for(;iter>0;--iter){
         double x = (double)rand_r(&seed)/RAND_MAX ;//[0,1]
         double y = (double)rand_r(&seed)/RAND_MAX ;//[0,1]
-        if(x*x + y*y <= 1.0){
+        if(x*x + y*y <= 1.0)
             ++sum;
-        }
-        iter--;
     }
 
     pthread_mutex_lock(&mutex);
@@ -43,8 +40,8 @@ int main(int argc, char *argv[]){
    }
 
    long long int total_iter = std::stoi(argv[2]);
-   int thread_num = std::stoi(argv[1]);
-   long long int counter = total_iter/thread_num;
+   unsigned thread_num = std::stoi(argv[1]);
+   long long unsigned counter = total_iter/thread_num;
 
    Arg arg[thread_num];
 
@@ -56,7 +53,7 @@ int main(int argc, char *argv[]){
 
    pthread_mutex_init(&mutex, NULL);
 
-   for(int i=0;i<thread_num;++i){
+   for(unsigned i=0;i<thread_num;++i){
        arg[i].thread_id = i;
        arg[i].iteration = counter;
        pthread_create(&all_threads[i],&attr,countPi,(void *)&arg[i]);
@@ -64,9 +61,9 @@ int main(int argc, char *argv[]){
    pthread_attr_destroy(&attr);
 
    void *status;
-   for(int i=0;i<thread_num;++i){
-      pthread_join(all_threads[i],&status);
-   }
-   std::cout<<"Final result: pi = "<<4*(long double)total_sum/total_iter<<std::endl;
+   for(unsigned i=0;i<thread_num;++i)
+       pthread_join(all_threads[i],&status);
+   
+   std::cout<<4*(double)total_sum/total_iter<<std::endl;
    pthread_exit(NULL);
 }

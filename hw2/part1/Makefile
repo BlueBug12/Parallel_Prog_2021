@@ -7,4 +7,5 @@ pi.o: pi.cpp
 	$(CXX) -c $< -o $@ -lpthread -O3
 
 .PHONY: clean
+clean:
 	rm -rf pi.out *.o
