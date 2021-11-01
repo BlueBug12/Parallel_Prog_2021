@@ -35,9 +35,13 @@ void workerThreadStart(WorkerArgs *const args)
     float y0 = args->y0;
     float y1 = args->y1;
 
-    int segment = args->height/args->numThreads;
-    int startRow = args->threadId * segment;
-    mandelbrotSerial(x0,y0,x1,y1,args->width,args->height,startRow,segment,args->maxIterations,args->output);
+    int segment = args->numThreads;
+    int startRow = args->threadId;
+    
+    for(;startRow<(int)args->height;startRow+=segment){
+        mandelbrotSerial(x0,y0,x1,y1,args->width,args->height,startRow,1,args->maxIterations,args->output);
+    }
+    
     std::clock_t c_end = std::clock();
     // TODO FOR PP STUDENTS: Implement the body of the worker
     // thread here. Each thread should make a call to mandelbrotSerial()
