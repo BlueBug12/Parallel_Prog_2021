@@ -29,7 +29,7 @@ extern void mandelbrotSerial(
 // Thread entrypoint.
 void workerThreadStart(WorkerArgs *const args)
 {
-    std::clock_t c_start = std::clock();
+    double startTime = CycleTimer::currentSeconds();
     float x0 = args->x0;
     float x1 = args->x1;
     float y0 = args->y0;
@@ -41,8 +41,8 @@ void workerThreadStart(WorkerArgs *const args)
     for(;startRow<(int)args->height;startRow+=segment){
         mandelbrotSerial(x0,y0,x1,y1,args->width,args->height,startRow,1,args->maxIterations,args->output);
     }
+    double endTime = CycleTimer::currentSeconds();
     
-    std::clock_t c_end = std::clock();
     // TODO FOR PP STUDENTS: Implement the body of the worker
     // thread here. Each thread should make a call to mandelbrotSerial()
     // to compute a part of the output image.  For example, in a
@@ -50,7 +50,7 @@ void workerThreadStart(WorkerArgs *const args)
     // half of the image and thread 1 could compute the bottom half.
 
     //printf("Hello world from thread %d\n", args->threadId);
-    std::cout<<"Thread "<< args->threadId<<" costs "<<1000.0 * (c_end - c_start) / CLOCKS_PER_SEC<<" ms."<<std::endl;
+    std::cout<<"Thread "<< args->threadId<<" costs "<<1000.0 * (endTime - startTime)<<" ms."<<std::endl;
 }
 
 //
