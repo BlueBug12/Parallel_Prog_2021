@@ -120,6 +120,7 @@ void bottom_up_step(
     int *distances,
     bool *f)
 {
+#pragma omp parallel for
     for(int i=0;i<g->num_nodes;++i){
         if(distances[i]==NOT_VISITED_MARKER){
             int start_edge = g->outgoing_starts[i];
@@ -128,7 +129,8 @@ void bottom_up_step(
                 int in_node = g->incoming_edges[neighbor];
                 if(f[in_node]){
                     distances[i] = distances[in_node] + 1;
-                    int index = new_frontier->count++;
+                    int index = __sync_fetch_and_add(&(new_frontier->count),1);
+                    //int index = new_frontier->count++;
                     new_frontier->vertices[index] = i; 
                     break;
                 }
