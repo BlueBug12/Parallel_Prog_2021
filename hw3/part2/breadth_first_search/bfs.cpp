@@ -13,7 +13,6 @@
 #define ROOT_NODE_ID 0
 #define NOT_VISITED_MARKER -1
 #define MAX_THREAD_NUM 4
-#define alpha 14
 #define beta 24
 
 void vertex_set_clear(vertex_set *list)
@@ -91,9 +90,6 @@ void bfs_top_down(Graph graph, solution *sol)
     vertex_set *frontier = &list1;
     vertex_set *new_frontier = &list2;
 
-    // initialize all nodes to NOT_VISITED
-    //for (int i = 0; i < graph->num_nodes; i++)
-    //    sol->distances[i] = NOT_VISITED_MARKER;
     memset(sol->distances,NOT_VISITED_MARKER,graph->num_nodes*sizeof(int));
 
     // setup frontier with the root node
@@ -171,9 +167,6 @@ void bfs_bottom_up(Graph graph, solution *sol)
     bool *f = (bool *)calloc(graph->num_nodes,sizeof(bool));
 
     memset(sol->distances,NOT_VISITED_MARKER,graph->num_nodes*sizeof(int));
-    // initialize all nodes to NOT_VISITED
-    //for (int i = 0; i < graph->num_nodes; i++)
-    //    sol->distances[i] = NOT_VISITED_MARKER;
 
     // setup frontier with the root node
     frontier->vertices[frontier->count++] = ROOT_NODE_ID;
@@ -204,18 +197,6 @@ void bfs_bottom_up(Graph graph, solution *sol)
     }
 }
 
-inline int count_in_edge(const int id, Graph & g){
-    int start = g->incoming_starts[id];
-    int end = (id==g->num_nodes-1) ? g->num_edges : g->incoming_starts[id+1];
-    return end - start;
-}
-
-inline int count_out_edge(const int id, Graph & g){
-    int start = g->outgoing_starts[id];
-    int end = (id==g->num_nodes-1) ? g->num_edges : g->outgoing_starts[id+1];
-    return end - start;
-}
-
 void bfs_hybrid(Graph graph, solution *sol)
 {
 
@@ -229,62 +210,25 @@ void bfs_hybrid(Graph graph, solution *sol)
 
     bool *f = (bool *)calloc(graph->num_nodes,sizeof(bool));
 
-    // initialize all nodes to NOT_VISITED
-    //for (int i = 0; i < graph->num_nodes; i++)
-    //    sol->distances[i] = NOT_VISITED_MARKER;
     memset(sol->distances,NOT_VISITED_MARKER,graph->num_nodes*sizeof(int));
 
     // setup frontier with the root node
     frontier->vertices[frontier->count++] = ROOT_NODE_ID;
     sol->distances[ROOT_NODE_ID] = 0;
     f[ROOT_NODE_ID] = true;
-    
-    int edge_frontier_num = graph->outgoing_starts[ROOT_NODE_ID+1] - graph->outgoing_starts[ROOT_NODE_ID];//m_f
-    int node_frontier_num = 1;//n_f
-    int edge_unvisited_num = graph->num_edges - edge_frontier_num;//m_u
-    int node_num = graph->num_nodes;
-    bool state = 0;//0 for top-down ; 1 for botttom up
     while (frontier->count != 0)
     {
-
         vertex_set_clear(new_frontier);
-        if(state==0){//top down
-            if((float)edge_frontier_num > (float)edge_unvisited_num/alpha){
-                bottom_up_step(graph,frontier,new_frontier,sol->distances,f);
-                state = 1;
-            }else{
-                top_down_step(graph, frontier, new_frontier, sol->distances);
-            }
-        }else{//bottom up
-            if((float)node_frontier_num < (float)node_num/beta){
-                top_down_step(graph, frontier, new_frontier, sol->distances);
-                state = 0;
-            }else{
-                bottom_up_step(graph,frontier,new_frontier,sol->distances,f);
-            }
-        }
-
-
-
+        if((float)frontier->count < (float)graph->num_nodes/beta)
+            top_down_step(graph, frontier, new_frontier, sol->distances);
+        else
+            bottom_up_step(graph,frontier,new_frontier,sol->distances,f);
         memset(f,0,sizeof(f));
         int *v = new_frontier->vertices;
         for(int i=0;i<new_frontier->count;++i){
             f[v[i]] = true;
         }
 
-        //update metrics
-        node_frontier_num = new_frontier->count;
-        edge_frontier_num = 0;
-        edge_unvisited_num = 0;
-        for(int i=0;i<node_num;++i){
-            if(f[i]){
-                edge_frontier_num += count_out_edge(i,graph);        
-            }else if(sol->distances[i]==NOT_VISITED_MARKER){
-                edge_unvisited_num += count_in_edge(i,graph);
-            }
-        }
-
         std::swap(frontier,new_frontier);
-
     }
 }
