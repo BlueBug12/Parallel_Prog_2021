@@ -35,7 +35,6 @@ void top_down_step(
     int *distances)
 {
     int add_d = distances[frontier->vertices[0]]+1;
-    int thread_num = omp_get_num_threads();
     std::vector<int> buffer[8];
     {
 #pragma omp parallel for schedule(dynamic,1028)
@@ -114,10 +113,12 @@ void bfs_top_down(Graph graph, solution *sol)
         printf("frontier=%-10d %.4f sec\n", frontier->count, end_time - start_time);
 #endif
 
+        std::swap(frontier,new_frontier);
         // swap pointers
+        /*
         vertex_set *tmp = frontier;
         frontier = new_frontier;
-        new_frontier = tmp;
+        new_frontier = tmp;*/
     }
 }
 
@@ -128,21 +129,36 @@ void bottom_up_step(
     int *distances,
     bool *f)
 {
+    int add_d = distances[frontier->vertices[0]]+1;
+    std::vector<int> buffer[8];
 #pragma omp parallel for
     for(int i=0;i<g->num_nodes;++i){
         if(distances[i]==NOT_VISITED_MARKER){
-            int start_edge = g->outgoing_starts[i];
-            int end_edge = (i==g->num_nodes-1) ? g->num_edges : g->outgoing_starts[i+1];
+            int tid = omp_get_thread_num();
+            int start_edge = g->incoming_starts[i];
+            int end_edge = (i==g->num_nodes-1) ? g->num_edges : g->incoming_starts[i+1];
             for(int neighbor = start_edge;neighbor < end_edge; ++neighbor){
                 int in_node = g->incoming_edges[neighbor];
                 if(f[in_node]){
-                    distances[i] = distances[in_node] + 1;
-                    int index = __sync_fetch_and_add(&(new_frontier->count),1);
-                    //int index = new_frontier->count++;
-                    new_frontier->vertices[index] = i; 
+                    distances[i] = add_d;
+                    buffer[tid].push_back(i);
+                    //int index = __sync_fetch_and_add(&(new_frontier->count),1);
+                    //new_frontier->vertices[index] = i; 
                     break;
                 }
             }
+        }
+    }
+
+    int *v = new_frontier->vertices;
+#pragma omp parallel for
+    for(int i=0;i<8;++i){
+        int len = buffer[i].size();
+        if(len==0)
+            continue;
+        int index = __sync_fetch_and_add(&new_frontier->count,len);
+        for(int j=0;j<len;++j){
+            v[index+j]=buffer[i][j];
         }
     }
 }
@@ -173,7 +189,8 @@ void bfs_bottom_up(Graph graph, solution *sol)
         double start_time = CycleTimer::currentSeconds();
 #endif
 
-        vertex_set_clear(new_frontier);
+        //vertex_set_clear(new_frontier);
+        new_frontier->count = 0;
 
         bottom_up_step(graph, frontier, new_frontier, sol->distances,f);
 
@@ -182,13 +199,17 @@ void bfs_bottom_up(Graph graph, solution *sol)
         printf("frontier=%-10d %.4f sec\n", frontier->count, end_time - start_time);
 #endif
         memset(f,0,sizeof(f));
+        int *v = new_frontier->vertices;
         for(int i=0;i<new_frontier->count;++i){
-            f[new_frontier->vertices[i]] = true;
+            f[v[i]] = true;
         }
+        std::swap(frontier,new_frontier);
+
         // swap pointers
+        /*
         vertex_set *tmp = frontier;
         frontier = new_frontier;
-        new_frontier = tmp;
+        new_frontier = tmp;*/
     }
     // For PP students:
     //
