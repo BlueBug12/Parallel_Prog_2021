@@ -16,7 +16,6 @@ int main(int argc, char **argv)
     // ---
 
     // TODO: MPI init
-    MPI_Status status;
     MPI_Comm_rank(MPI_COMM_WORLD,&world_rank);    
     MPI_Comm_size(MPI_COMM_WORLD,&world_size);    
     long long int iteration = tosses/world_size;
