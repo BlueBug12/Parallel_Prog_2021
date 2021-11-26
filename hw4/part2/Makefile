@@ -2,18 +2,13 @@ CXX := mpicxx
 
 TARGET := matmul
 HOST_FILE := hosts
-
-SUFFIX=-I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include -pthread -L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi_cxx -lmpi
-FLAG=-O3 -m64
+FLAG=-O3
 
 all: $(TARGET)
 
 $(TARGET): main.cc matmul.cc
-	g++ $(FLAG) $^ -o $(TARGET) $(SUFFIX)
+	g++ $(FLAG) $^ -o $(TARGET) -lmpi
 
-
-#$(TARGET): main.cc matmul.cc
-#	$(CXX) $^ -o $(TARGET)
 
 .PHONY: clean test run
 
