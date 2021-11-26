@@ -51,7 +51,7 @@ void construct_matrices(int *n_ptr, int *m_ptr, int *l_ptr, int **a_mat_ptr, int
         *b_mat_ptr = (int *)malloc(m*l*sizeof(int));
     }
 
-    //brocast the whole matrix b(transposed)
+    //brodcast the whole matrix b(transposed)
     MPI_Bcast(*b_mat_ptr,m*l,MPI_INT,0,MPI_COMM_WORLD);
     
 
@@ -82,7 +82,8 @@ void matrix_multiply(const int n, const int m, const int l, const int *a_mat, co
     }else{
         sol = (int *)calloc(l*batch,sizeof(int));
     }
-    int tsize = 8;
+    
+    int tsize = 16;
     for(int i=0;i<batch;i+=tsize){
         for(int j=0;j<l;j+=tsize){
             for(int k=0;k<m;k+=tsize){
@@ -101,7 +102,6 @@ void matrix_multiply(const int n, const int m, const int l, const int *a_mat, co
             }
         }
     }
-
     /*
     for(int i=0;i<batch;++i){//row index of ma
         const int sol_base = i*l;
