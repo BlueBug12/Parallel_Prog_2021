@@ -82,7 +82,27 @@ void matrix_multiply(const int n, const int m, const int l, const int *a_mat, co
     }else{
         sol = (int *)calloc(l*batch,sizeof(int));
     }
+    int tsize = 8;
+    for(int i=0;i<batch;i+=tsize){
+        for(int j=0;j<l;j+=tsize){
+            for(int k=0;k<m;k+=tsize){
+                for(int t_i=0;t_i<tsize&&i+t_i<batch;++t_i){
+                    const int t1_row = t_i+i;
+                    const int a_base = t1_row*m + k;
+                    for(int t_j=0;t_j<tsize&&j+t_j<l;++t_j){
+                        const int t2_row = t_j+j;
+                        const int b_base = t2_row*m + k;
+                        const int sol_index = t1_row*l + t2_row;
+                        for(int t_k=0;t_k<tsize&&k+t_k<m;++t_k){
+                            sol[sol_index]+=a_mat[a_base+t_k]*b_mat[b_base+t_k];
+                        }
+                    }
+                }
+            }
+        }
+    }
 
+    /*
     for(int i=0;i<batch;++i){//row index of ma
         const int sol_base = i*l;
         const int a_base = i*m;
@@ -93,7 +113,7 @@ void matrix_multiply(const int n, const int m, const int l, const int *a_mat, co
                 sol[sol_i] += a_mat[a_base+k]*b_mat[b_base+k];
             }
         }
-    }
+    }*/
 
     if(rank == 0){
         for(int i=1;i<size-1;++i){
