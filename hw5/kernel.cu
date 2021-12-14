@@ -42,7 +42,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     int *output_device;
     cudaMalloc(&output_device,size);
     float block_dim_x = 16;
-    float block_dim_y = 12;
+    float block_dim_y = 16;
     dim3 threadsPerBlock(block_dim_x,block_dim_y);
     dim3 numBlocks((int)ceil(resX/block_dim_x),(int)ceil(resY/block_dim_y));
     mandelKernel<<<numBlocks,threadsPerBlock>>>(stepX,stepY,lowerX,lowerY,output_device,resX,resY,maxIterations);
