@@ -50,7 +50,7 @@ void hostFE (float upperX, float upperY, float lowerX, float lowerY, int* img, i
     cudaMallocPitch(&output_device,&pitch,sizeof(int)*resX,resY);
     cudaHostAlloc(&output_host,resY*pitch,cudaHostAllocMapped);
     
-    int shift_x = 4;
+    int shift_x = 2;
     float block_dim_x = 16;
     float block_dim_y = 16;
 
